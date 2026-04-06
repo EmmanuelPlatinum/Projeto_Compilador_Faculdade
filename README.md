@@ -3,7 +3,7 @@
 UNIC – Universidade de CuiabáRelatório Técnico: 
 
 Especificação da Gramática do Analisador LéxicoData: 2026
-Professor: Edson KomatsuIntegrantes: Emmanuel, Sandro 
+Professor: Edson KomatsuIntegrantes: Emmanuel Duarte de Oliveira, Sandro, Leandro ,
 CuiabáMato Grosso 2026
 
 # Compilador Simples em Go
