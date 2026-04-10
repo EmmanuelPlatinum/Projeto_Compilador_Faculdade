@@ -3,9 +3,13 @@
 UNIC – Universidade de CuiabáRelatório Técnico: 
 
 Especificação da Gramática do Analisador Léxico
+
 Matéria: Compiladores
+
 Professor: Edson Komatsu
+
 Integrantes: Emmanuel Duarte de Oliveira, Sandro Delmondes dos Anjos, Leandro Augusto Mestre Santana
+
 Cuiabá/MT 2026
 
 # Compilador Simples em Go
@@ -14,18 +18,17 @@ Cuiabá/MT 2026
 
 ```
 Programa      ::= { Instrucao }
-Instrucao     ::= Atribuicao | Print | If | While
-Atribuicao    ::= Ident "=" Expressao
-Expressao     ::= Termo [ Operator Termo ]
+Instrução     ::= Atribuicao | Print | If | While
+Atribuição    ::= Ident "=" Expressao
+Expressão     ::= Termo [ Operator Termo ]
 Termo         ::= Number | Ident
 Print         ::= "print" "(" Ident ")"
 If            ::= "if" "(" Condicao ")" "{" { Instrucao } "}" [ "else" "{" { Instrucao } "}" ]
 While         ::= "while" "(" Condicao ")" "{" { Instrucao } "}"
-Condicao      ::= Termo Operator Termo
-
+Condição      ::= Termo Operator Termo
 Ident         ::= [a-zA-Z_][a-zA-Z0-9_]*
 Number        ::= [0-9]+
-Operator      ::= "=" | "+" | "-" | "*" | "/" | ">" | "<" | "!"
+Operadores     ::= "=" | "+" | "-" | "*" | "/" | ">" | "<" | "!"
 ```
 
 - **Tipos de dados**: Apenas inteiros (`Number`).
@@ -98,13 +101,13 @@ Instrucao = Atribuicao
           | While ;
 
 (* Regras de Produção *)
-Atribuicao = Ident , "=" , Expressao ;
+Atribuição = Ident , "=" , Expressao ;
 Print = "print" , "(" , Ident , ")" ;
 If = "if" , "(" , Condicao , ")" , "{" , { Instrucao } , "}" , [ "else" , "{" , { Instrucao } , "}" ] ;
 While = "while" , "(" , Condicao , ")" , "{" , { Instrucao } , "}" ;
 
-Condicao = Termo , Operator , Termo ;
-Expressao = Termo , [ Operator , Termo ] ;
+Condição = Termo , Operator , Termo ;
+Expressão = Termo , [ Operator , Termo ] ;
 Termo = Number | Ident ;
 
 4. Descrição das EstruturasPrograma: Raiz do parser, consistindo numa lista de instruções.If / Else: Estrutura condicional que permite a execução de blocos alternativos de código.While: Laço de repetição baseado numa condição lógica.Expressão: Suporta operações matemáticas simples entre números ou variáveis (Termos).Condição: Compara dois Termos (números ou variáveis) através de um operador lógico ou relacional.Termo: Unidade básica para cálculos e comparações, podendo ser um literal numérico ou um identificador (variável).
