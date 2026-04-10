@@ -2,9 +2,11 @@
 
 UNIC – Universidade de CuiabáRelatório Técnico: 
 
-Especificação da Gramática do Analisador LéxicoData: 2026
-Professor: Edson KomatsuIntegrantes: Emmanuel, Sandro 
-CuiabáMato Grosso 2026
+Especificação da Gramática do Analisador Léxico
+Matéria: Compiladores
+Professor: Edson Komatsu
+Integrantes: Emmanuel Duarte de Oliveira, Sandro Delmondes dos Anjos, Leandro Augusto Mestre Santana
+Cuiabá/MT 2026
 
 # Compilador Simples em Go
 
@@ -60,7 +62,33 @@ while (x < 100) {
 
 1. IntroduçãoEste documento descreve a especificação formal da linguagem de programação desenvolvida para a disciplina de Compiladores. A implementação utiliza um analisador sintático descendente (Top-Down) baseado na biblioteca Participle para a linguagem Go. O sistema é capaz de processar instruções de atribuição, saída de dados e estruturas de controlo de fluxo.
 
-2. Especificação Léxica (Tokens)A análise léxica é definida por um conjunto de regras de expressão regular que identificam os símbolos básicos da linguagem:TokenPadrão (Regex)DescriçãoKeyword`\b(ifelseIdent[a-zA-Z_][a-zA-Z0-9_]*Identificadores de variáveis.Number\d+Literais numéricos inteiros.Operator[=+*/><!-]Operadores de atribuição, aritméticos e lógicos.Punct[{}()]Delimitadores de blocos e expressões.
+2. Especificação Léxica (Tokens)
+
+A análise léxica é definida por um conjunto de regras de expressão regular que identificam os símbolos básicos da linguagem:
+
+Keyword: \b(if|else|while|print)\b
+
+Descrição: Palavras reservadas para controle de fluxo e funções do sistema.
+
+Ident: [a-zA-Z_][a-zA-Z0-9_]*
+
+Descrição: Identificadores de variáveis (deve começar com letra ou sublinhado).
+
+Number: \d+
+
+Descrição: Literais numéricos inteiros (sequências de dígitos de 0 a 9).
+
+Operator: [=+*/><!-]
+
+Descrição: Operadores de atribuição, aritméticos e relacionais.
+
+Punct: [{}()]
+
+Descrição: Delimitadores e pontuação para blocos e expressões.
+
+Whitespace: \s+
+
+Descrição: Espaços, tabs e quebras de linha (identificados pelo léxico e ignorados pelo sintático).
 
 3. Gramática Formal (EBNF)A sintaxe da linguagem segue o padrão ISO/IEC 14977. Abaixo, a representação das produções que compõem a Árvore Sintática Abstrata (AST):EBNF(* Estrutura Principal *)
 Programa = { Instrucao } ;
@@ -81,9 +109,9 @@ Termo = Number | Ident ;
 
 4. Descrição das EstruturasPrograma: Raiz do parser, consistindo numa lista de instruções.If / Else: Estrutura condicional que permite a execução de blocos alternativos de código.While: Laço de repetição baseado numa condição lógica.Expressão: Suporta operações matemáticas simples entre números ou variáveis (Termos).Condição: Compara dois Termos (números ou variáveis) através de um operador lógico ou relacional.Termo: Unidade básica para cálculos e comparações, podendo ser um literal numérico ou um identificador (variável).
 
-5. Exemplo de Implementação (Go)Abaixo, um fragmento do código que demonstra a integração do Lexer com o Parser:Go// Trecho do ficheiro main.go
+5. Exemplo de Implementação (Go)Abaixo, um fragmento do código que demonstra a integração do Lexer com o Parser:Go// Trecho do arquivo main.go
 parser, err := participle.Build[Programa](
     participle.Lexer(meuLexer),
     participle.Elide("Whitespace"),
 ) 
-// ... processamento do ficheiro teste.txt
+// ... processamento do arquivo teste.txt
