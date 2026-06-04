@@ -1,120 +1,143 @@
 # Projeto_Compilador_Faculdalde
 
-UNIC – Universidade de CuiabáRelatório Técnico: 
+**UNIC – Universidade de Cuiabá** **Relatório Técnico / Repositório Oficial** **Matéria:** Compiladores  
+**Professor:** Edson Komatsu  
+**Integrantes:** Emmanuel Duarte de Oliveira, Sandro Delmondes dos Anjos, Leandro Augusto Mestre Santana  
+**Local/Ano:** Cuiabá/MT - 2026
 
-Especificação da Gramática do Analisador Léxico
+---
 
-Matéria: Compiladores
+## 1. Introdução
+Este documento descreve a especificação formal e a implementação de um compilador didático desenvolvido para a disciplina de Compiladores. 
 
-Professor: Edson Komatsu
+O sistema realiza o ciclo completo de tradução. Ele executa a **análise léxica** (identificação de tokens), **análise sintática** (construção da Árvore Sintática Abstrata - AST via *Top-Down*), **análise semântica** básica (verificação de declaração prévia de variáveis através de uma Tabela de Símbolos) e, por fim, a **geração de código alvo**, atuando como um transpilador que converte a AST validada em um código executável na linguagem **C**.
 
-Integrantes: Emmanuel Duarte de Oliveira, Sandro Delmondes dos Anjos, Leandro Augusto Mestre Santana
+## 2. Arquitetura do Compilador e Diagrama de Fases
+O compilador foi desenvolvido de forma modular em um único arquivo principal (`main.go`), estruturado nas seguintes fases e interfaces lógicas:
 
-Cuiabá/MT 2026
+**Diagrama de Fases:**
+`[Código Fonte (.txt)]` ➡️ **Léxico** ➡️ `[Tokens]` ➡️ **Sintático** ➡️ `[Árvore AST]` ➡️ **Semântico** ➡️ `[AST Validada]` ➡️ **Backend** ➡️ `[saida.c]` ➡️ **GCC** ➡️ `[Executável]`
 
-# Compilador Simples em Go
+* **Módulo Léxico:** Utiliza regras de expressões regulares mapeadas via `lexer.SimpleRule` para tokenização direta.
+* **Módulo Sintático:** Mapeia a gramática EBNF diretamente para estruturas de dados (Structs) construindo a AST através da biblioteca Participle.
+* **Módulo Semântico:** Funções recursivas validam o uso de variáveis cruzando dados com uma Tabela de Símbolos em tempo de execução. Bloqueia variáveis não declaradas.
+* **Módulo de Backend (Geração de Código):** Módulo de transpilação que percorre a AST validada e traduz as instruções para um arquivo de saída formatado em C (`saida.c`), terceirizando a montagem do código de máquina final para o compilador GCC.
 
-## EBNF da Linguagem
+## 3. Justificativa das Ferramentas de Apoio
+Em vez de utilizar geradores legados como Flex/Bison ou JavaCC, optou-se pela linguagem **Go** em conjunto com a biblioteca **Participle**. A escolha justifica-se pela capacidade do Participle de construir analisadores sintáticos descendentes (*Top-Down*) mapeando a gramática EBNF diretamente para as estruturas de dados nativas da linguagem. Isso garante uma arquitetura altamente modular e tipagem forte. Além disso, o binário gerado pelo Go é autossuficiente e de rápida execução, dispensando ambientes virtuais complexos como a JVM.
 
-```
-Programa      ::= { Instrucao }
-Instrução     ::= Atribuicao | Print | If | While
-Atribuição    ::= Ident "=" Expressao
-Expressão     ::= Termo [ Operator Termo ]
-Termo         ::= Number | Ident
-Print         ::= "print" "(" Ident ")"
-If            ::= "if" "(" Condicao ")" "{" { Instrucao } "}" [ "else" "{" { Instrucao } "}" ]
-While         ::= "while" "(" Condicao ")" "{" { Instrucao } "}"
-Condição      ::= Termo Operator Termo
-Ident         ::= [a-zA-Z_][a-zA-Z0-9_]*
-Number        ::= [0-9]+
-Operadores     ::= "=" | "+" | "-" | "*" | "/" | ">" | "<" | "!"
-```
+---
 
-- **Tipos de dados**: Apenas inteiros (`Number`).
-- **Operações**: Aritméticas e relacionais básicas.
-- **Declaração de variáveis**: Implícita na atribuição.
-- **Estruturas de controle**: `if`/`else`, `while`.
-- **Operadores**: `=`, `+`, `-`, `*`, `/`, `>`, `<`, `!`
+## 4. Gramática Formal (EBNF)
+A sintaxe da linguagem segue o padrão ISO/IEC 14977. Abaixo, a representação das produções que compõem a Árvore Sintática Abstrata (AST):
 
-## Exemplo de Código (teste.txt)
-
-```
-x = 10
-y = 20
-if (x > y) {
-    print(x)
-} else {
-    print(y)
-}
-while (x < 100) {
-    x = x + 1
-}
-```
-
-## Regras de Sintaxe
-- Cada instrução deve estar em uma linha separada ou delimitada por chaves/blocos.
-- Espaços em branco são ignorados.
-- Variáveis são criadas na primeira atribuição.
-- O compilador faz análise léxica, sintática e exibe tokens e erros léxicos.
-
-## Execução
-1. Compile com `go run main.go`.
-2. O analisador léxico exibirá todos os tokens válidos e reportará erros léxicos, se houver.
-3. O parser exibirá o número de instruções raiz encontradas.
-
-1. IntroduçãoEste documento descreve a especificação formal da linguagem de programação desenvolvida para a disciplina de Compiladores. A implementação utiliza um analisador sintático descendente (Top-Down) baseado na biblioteca Participle para a linguagem Go. O sistema é capaz de processar instruções de atribuição, saída de dados e estruturas de controlo de fluxo.
-
-2. Especificação Léxica (Tokens)
-
-A análise léxica é definida por um conjunto de regras de expressão regular que identificam os símbolos básicos da linguagem:
-
-Keyword: \b(if|else|while|print)\b
-
-Descrição: Palavras reservadas para controle de fluxo e funções do sistema.
-
-Ident: [a-zA-Z_][a-zA-Z0-9_]*
-
-Descrição: Identificadores de variáveis (deve começar com letra ou sublinhado).
-
-Number: \d+
-
-Descrição: Literais numéricos inteiros (sequências de dígitos de 0 a 9).
-
-Operator: [=+*/><!-]
-
-Descrição: Operadores de atribuição, aritméticos e relacionais.
-
-Punct: [{}()]
-
-Descrição: Delimitadores e pontuação para blocos e expressões.
-
-Whitespace: \s+
-
-Descrição: Espaços, tabs e quebras de linha (identificados pelo léxico e ignorados pelo sintático).
-
-3. Gramática Formal (EBNF)A sintaxe da linguagem segue o padrão ISO/IEC 14977. Abaixo, a representação das produções que compõem a Árvore Sintática Abstrata (AST):EBNF(* Estrutura Principal *)
+```ebnf
+(* Estrutura Principal *)
 Programa = { Instrucao } ;
-Instrucao = Atribuicao
-          | Print
-          | If
-          | While ;
+Instrucao = Atribuicao | Print | If | While ;
 
 (* Regras de Produção *)
-Atribuição = Ident , "=" , Expressao ;
+Atribuicao = Ident , "=" , Expressao ;
 Print = "print" , "(" , Ident , ")" ;
 If = "if" , "(" , Condicao , ")" , "{" , { Instrucao } , "}" , [ "else" , "{" , { Instrucao } , "}" ] ;
 While = "while" , "(" , Condicao , ")" , "{" , { Instrucao } , "}" ;
 
-Condição = Termo , Operator , Termo ;
-Expressão = Termo , [ Operator , Termo ] ;
+Condicao = Termo , Operator , Termo ;
+Expressao = Termo , [ Operator , Termo ] ;
 Termo = Number | Ident ;
 
-4. Descrição das EstruturasPrograma: Raiz do parser, consistindo numa lista de instruções.If / Else: Estrutura condicional que permite a execução de blocos alternativos de código.While: Laço de repetição baseado numa condição lógica.Expressão: Suporta operações matemáticas simples entre números ou variáveis (Termos).Condição: Compara dois Termos (números ou variáveis) através de um operador lógico ou relacional.Termo: Unidade básica para cálculos e comparações, podendo ser um literal numérico ou um identificador (variável).
+## 5. Especificação Léxica (Tokens)
+* **Keyword:** `\b(if|else|while|print)\b` (Palavras reservadas para controle de fluxo e funções).
+* **Ident:** `[a-zA-Z_][a-zA-Z0-9_]*` (Identificadores de variáveis).
+* **Number:** `\d+` (Literais numéricos inteiros).
+* **Operator:** `[=+*/><!-]` (Operadores de atribuição, aritméticos e relacionais).
+* **Punct:** `[{}()]` (Delimitadores e pontuação para blocos).
+* **Whitespace:** `\s+` (Espaços e quebras de linha - ignorados pelo sintático).
 
-5. Exemplo de Implementação (Go)Abaixo, um fragmento do código que demonstra a integração do Lexer com o Parser:Go// Trecho do arquivo main.go
-parser, err := participle.Build[Programa](
-    participle.Lexer(meuLexer),
-    participle.Elide("Whitespace"),
-) 
-// ... processamento do arquivo teste.txt
+## 6. Regras de Sintaxe e Semântica
+- **Estruturas de controle:** Suporta `if`/`else` e laços `while`.
+- **Formatação:** Cada instrução deve estar em uma linha separada ou delimitada por chaves/blocos.
+- **Tipos de dados:** O sistema lida primariamente com inteiros (`Number`).
+- **Análise Semântica (Escopo):** Variáveis são instanciadas implicitamente na primeira atribuição. É estritamente proibido utilizar uma variável em operações matemáticas, lógicas ou em comandos `print` antes de sua atribuição. O compilador emitirá erro semântico nesses casos.
+
+---
+
+## 7. Configuração do Ambiente (Para Máquinas Novas)
+Se você ou o avaliador estiverem executando este projeto em um computador novo, é necessário configurar os compiladores base:
+
+### Passo 1: Instalar as Linguagens (Go e GCC)
+
+**🖥️ Para Linux (Pop!_OS / Ubuntu):**
+No terminal, execute os comandos:
+```bash
+sudo apt update
+sudo apt install golang build-essential
+🪟 Para Windows:
+
+Instalar Go: Baixe e instale a versão mais recente diretamente do site oficial (go.dev).
+
+Instalar GCC: Como o Windows não possui GCC nativo, você tem duas opções:
+
+Opção A: Instalar o MinGW-w64 e adicioná-lo às variáveis de ambiente (PATH) do Windows.
+
+Opção B (Recomendada): Rodar o projeto através do WSL (Windows Subsystem for Linux), o que permite usar exatamente os mesmos comandos de terminal do Linux.
+
+Passo 2: Sincronizar as Bibliotecas (Crucial)
+Abra o terminal (ou CMD/PowerShell) na pasta raiz do projeto e execute o comando abaixo. Isso fará o download da biblioteca participle utilizada na Árvore Sintática:
+
+Bash
+go mod tidy
+Passo 3: Configurar o VS Code (Opcional)
+Para uma melhor experiência de desenvolvimento e testes, recomendamos utilizar o Visual Studio Code com as extensões:
+
+Go (Extensão oficial)
+
+Code Runner (Para execução rápida com um clique)
+
+8. Como Executar (Ambiente de Testes)
+O compilador lê o código-fonte exclusivamente do arquivo teste.txt localizado na raiz do projeto.
+
+Método 1: Script Automático (Linux/macOS/WSL)
+Abra o arquivo teste.txt.
+
+Apague o conteúdo explicativo e cole um dos exemplos da pasta /testes (códigos funcionando ou erros).
+
+Salve o arquivo.
+
+No terminal, execute:
+
+Bash
+./run.sh
+Método 2: Extensão Code Runner (VS Code - Windows ou Linux)
+Cole o código desejado no teste.txt e salve.
+
+Abra o arquivo main.go.
+
+Clique no botão de "Play" (Run Code) localizado no canto superior direito da tela.
+
+Método 3: Execução Manual (Terminal, CMD ou PowerShell)
+Se não quiser usar scripts, execute os passos diretamente:
+
+Bash
+# 1. Roda o compilador Go (Gera o arquivo saida.c)
+go run main.go
+
+# 2. Compila o arquivo C para código de máquina
+gcc saida.c -o meu_programa
+
+# 3. Executa o programa final
+./meu_programa            # No Linux/Mac/WSL
+meu_programa.exe          # No Windows
+9. Estrutura da Pasta de Testes
+Para facilitar a avaliação (testes de regressão e validação funcional), disponibilizamos uma pasta /testes com os seguintes cenários prontos:
+
+codigo_funcionando_exemplo.txt: O caso de uso válido e completo.
+
+erro_lexico.txt: Demonstra o tratamento de caracteres inválidos.
+
+erro_sintatico.txt: Demonstra o tratamento de fechamentos de bloco incompletos.
+
+erro_semantico.txt: Demonstra o bloqueio de variáveis fantasmas.
+
+10. Referências Bibliográficas
+MEDEIROS, João Antonio. Compiladores para Humanos. Disponível em: https://johnidm.gitbooks.io/compiladores-para-humanos/. Acesso em: jun. 2026.

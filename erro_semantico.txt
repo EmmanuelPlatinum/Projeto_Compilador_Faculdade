@@ -1,0 +1,3 @@
+x = 10
+soma = x + z
+print(soma)

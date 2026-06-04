@@ -1,5 +1,0 @@
-int x;
-x = 5;
-if (x > 2 { 
-    print("Faltou fechar o parenteses do if");
-}

@@ -1,0 +1,10 @@
+x = 10
+y = 20
+if (x > y) {
+    print(x)
+} else {
+    print(y)
+}
+while (x < 100) {
+    x = x + 1
+}

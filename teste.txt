@@ -1,10 +1,14 @@
-x = 10
-y = 20
-if (x > y) {
-    print(x)
-} else {
-    print(y)
-}
-while (x < 100) {
-    x = x + 1
-}
+// ==========================================
+// ARQUIVO DE ENTRADA DO COMPILADOR
+// ==========================================
+// 1. Apague todo este texto explicativo.
+// 2. Copie um dos exemplos da pasta "testes" (ex: codigo_funcionando_exemplo.txt ou os de erro).
+// 3. Cole o código aqui e salve o arquivo.
+// 4. No terminal, execute o comando: ./run.sh
+//    (Ou utilize a extensão Code Runner clicando no botão 'Play' no arquivo main.go)
+
+
+Caso prefira não usar o script bash, execute os comandos sequencialmente:
+go run main.go
+gcc saida.c -o meu_programa
+./meu_programa
