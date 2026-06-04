@@ -137,5 +137,165 @@ func main() {
 		return
 	}
 
-	fmt.Printf("✅ Sucesso! O compilador encontrou %d instrução(ões) raiz no código.\n", len(ast.Instrucoes))
+	// ... seu código que já estava lá em cima (parser, etc) ...
+
+    fmt.Printf("✅ Sucesso! O compilador encontrou %d instrução(ões) raiz no código.\n", len(ast.Instrucoes))
+
+    // === EXECUÇÃO DA FASE 5 (SEMÂNTICA) ===
+    fmt.Println("\n🚀 Iniciando Análise Semântica...")
+    
+    // Cria a Tabela de Símbolos (um mapa para guardar o nome das variáveis)
+    tabelaSimbolos := make(map[string]bool)
+    
+    // Roda a análise
+    errSemantico := analisarSemantica(ast.Instrucoes, tabelaSimbolos)
+    if errSemantico != nil {
+        fmt.Printf("❌ Erro Semântico: %v\n", errSemantico)
+        return // Trava a compilação aqui se der erro
+    }
+    
+    fmt.Println("✅ Análise Semântica aprovada! Nenhuma variável usada sem declaração.")
+
+    // === EXECUÇÃO DA FASE 6 (GERAÇÃO DE CÓDIGO) ===
+    fmt.Println("\n⚙️ Gerando código executável (C)...")
+    errGen := gerarCodigoC(ast.Instrucoes, tabelaSimbolos)
+    if errGen != nil {
+        fmt.Printf("❌ Erro na geração de código: %v\n", errGen)
+        return
+    }
+    fmt.Println("✅ Código gerado com sucesso no arquivo 'saida.c'!")
+
+} // 🚨 A FUNÇÃO MAIN() TERMINA EXATAMENTE AQUI! NENHUM COMANDO DEVE FICAR ABAIXO DESSA CHAVE!
+
+
+// =============================================================================
+// TODAS AS FUNÇÕES EXTRAS FICAM AQUI PARA BAIXO (FORA DO MAIN)
+// =============================================================================
+
+// --- FASE 5: ANÁLISE SEMÂNTICA ---
+func analisarSemantica(instrucoes []*Instrucao, simbolos map[string]bool) error {
+	for _, inst := range instrucoes {
+		if inst.Atribuicao != nil {
+			if err := checarExpressao(inst.Atribuicao.Expressao, simbolos); err != nil {
+				return err
+			}
+			simbolos[inst.Atribuicao.Variavel] = true
+		} else if inst.Print != nil {
+			if !simbolos[inst.Print.Valor] {
+				return fmt.Errorf("variável '%s' usada no print sem ser declarada", inst.Print.Valor)
+			}
+		} else if inst.If != nil {
+			if err := checarCondicao(inst.If.Condicao, simbolos); err != nil {
+				return err
+			}
+			if err := analisarSemantica(inst.If.Corpo, simbolos); err != nil {
+				return err
+			}
+			if inst.If.Else != nil {
+				if err := analisarSemantica(inst.If.Else, simbolos); err != nil {
+					return err
+				}
+			}
+		} else if inst.While != nil {
+			if err := checarCondicao(inst.While.Condicao, simbolos); err != nil {
+				return err
+			}
+			if err := analisarSemantica(inst.While.Corpo, simbolos); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func checarExpressao(exp *Expressao, simbolos map[string]bool) error {
+	if exp.Esquerda.Variavel != nil && !simbolos[*exp.Esquerda.Variavel] {
+		return fmt.Errorf("variável '%s' não declarada", *exp.Esquerda.Variavel)
+	}
+	if exp.Direita != nil && exp.Direita.Variavel != nil && !simbolos[*exp.Direita.Variavel] {
+		return fmt.Errorf("variável '%s' não declarada", *exp.Direita.Variavel)
+	}
+	return nil
+}
+
+func checarCondicao(cond *Condicao, simbolos map[string]bool) error {
+	if cond.Esquerda.Variavel != nil && !simbolos[*cond.Esquerda.Variavel] {
+		return fmt.Errorf("variável '%s' não declarada na condição", *cond.Esquerda.Variavel)
+	}
+	if cond.Direita.Variavel != nil && !simbolos[*cond.Direita.Variavel] {
+		return fmt.Errorf("variável '%s' não declarada na condição", *cond.Direita.Variavel)
+	}
+	return nil
+}
+
+// --- FASE 6: GERAÇÃO DE CÓDIGO (C) ---
+func gerarCodigoC(instrucoes []*Instrucao, simbolos map[string]bool) error {
+	file, err := os.Create("saida.c")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	file.WriteString("#include <stdio.h>\n\n")
+	file.WriteString("int main() {\n")
+
+	if len(simbolos) > 0 {
+		file.WriteString("    int ")
+		var vars []string
+		for v := range simbolos {
+			vars = append(vars, v)
+		}
+		file.WriteString(strings.Join(vars, ", ") + ";\n")
+	}
+
+	gerarInstrucoesC(file, instrucoes, 1)
+
+	file.WriteString("    return 0;\n")
+	file.WriteString("}\n")
+	return nil
+}
+
+func gerarInstrucoesC(file *os.File, instrucoes []*Instrucao, nivel int) {
+	ident := strings.Repeat("    ", nivel)
+	for _, inst := range instrucoes {
+		if inst.Atribuicao != nil {
+			esq := termoString(inst.Atribuicao.Expressao.Esquerda)
+			dir := ""
+			if inst.Atribuicao.Expressao.Direita != nil {
+				dir = " " + inst.Atribuicao.Expressao.Op + " " + termoString(inst.Atribuicao.Expressao.Direita)
+			}
+			file.WriteString(fmt.Sprintf("%s%s = %s%s;\n", ident, inst.Atribuicao.Variavel, esq, dir))
+		} else if inst.Print != nil {
+			file.WriteString(fmt.Sprintf("%sprintf(\"%%d\\n\", %s);\n", ident, inst.Print.Valor))
+		} else if inst.If != nil {
+			condEsq := termoString(inst.If.Condicao.Esquerda)
+			condOp := inst.If.Condicao.Op
+			if condOp == "=" { condOp = "==" } 
+			condDir := termoString(inst.If.Condicao.Direita)
+
+			file.WriteString(fmt.Sprintf("%sif (%s %s %s) {\n", ident, condEsq, condOp, condDir))
+			gerarInstrucoesC(file, inst.If.Corpo, nivel+1)
+			if inst.If.Else != nil {
+				file.WriteString(fmt.Sprintf("%s} else {\n", ident))
+				gerarInstrucoesC(file, inst.If.Else, nivel+1)
+			}
+			file.WriteString(fmt.Sprintf("%s}\n", ident))
+		} else if inst.While != nil {
+			condEsq := termoString(inst.While.Condicao.Esquerda)
+			condOp := inst.While.Condicao.Op
+			if condOp == "=" { condOp = "==" } 
+			condDir := termoString(inst.While.Condicao.Direita)
+
+			file.WriteString(fmt.Sprintf("%swhile (%s %s %s) {\n", ident, condEsq, condOp, condDir))
+			gerarInstrucoesC(file, inst.While.Corpo, nivel+1)
+			file.WriteString(fmt.Sprintf("%s}\n", ident))
+		}
+	}
+}
+
+func termoString(t *Termo) string {
+	if t.Numero != nil {
+		return fmt.Sprintf("%d", *t.Numero)
+	}
+	return *t.Variavel
 }
