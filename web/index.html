@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compilador Didático - Emmanuel, Sandro e Leandro</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #d4d4d4; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 900px; }
+        h1 { color: #569cd6; text-align: center; margin-bottom: 5px; }
+        p.subtitle { text-align: center; color: #858585; margin-bottom: 25px; }
+        
+        .controls { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center; }
+        select { background-color: #2d2d2d; color: #d4d4d4; border: 1px solid #3c3c3c; padding: 10px; border-radius: 5px; width: 60%; font-size: 16px; }
+        button { background-color: #0e639c; color: white; border: none; padding: 10px 30px; font-size: 16px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { background-color: #1177bb; }
+        
+        .panels { display: flex; gap: 20px; }
+        .panel { flex: 1; display: flex; flex-direction: column; }
+        .panel h3 { margin-top: 0; color: #4ec9b0; }
+        
+        textarea { width: 100%; height: 400px; background-color: #252526; color: #ce9178; border: 1px solid #3c3c3c; border-radius: 5px; padding: 15px; font-family: 'Courier New', Courier, monospace; font-size: 16px; resize: none; box-sizing: border-box; }
+        pre { width: 100%; height: 400px; background-color: #000000; color: #4af626; border: 1px solid #3c3c3c; border-radius: 5px; padding: 15px; font-family: 'Courier New', Courier, monospace; font-size: 14px; overflow-y: auto; box-sizing: border-box; margin: 0; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Compilador Didático</h1>
+    <p class="subtitle">Criado por Emmanuel, Sandro e Leandro - Prof. Edson Komatsu</p>
+
+    <div class="controls">
+        <select id="exemplos" onchange="carregarExemplo()">
+            <option value="valido">✅ Código Completo (Funcionando)</option>
+            <option value="lexico">❌ Teste de Erro: Léxico</option>
+            <option value="sintatico">❌ Teste de Erro: Sintático</option>
+            <option value="semantico">❌ Teste de Erro: Semântico</option>
+        </select>
+        <button onclick="executarCodigo()">▶ Executar Compilador</button>
+    </div>
+
+    <div class="panels">
+        <div class="panel">
+            <h3>Entrada (Código Fonte)</h3>
+            <textarea id="codigoInput" spellcheck="false"></textarea>
+        </div>
+        <div class="panel">
+            <h3>Saída do Terminal</h3>
+            <pre id="terminalOutput">Aguardando execução...</pre>
+        </div>
+    </div>
+</div>
+
+<script>
+    const codigos = {
+        valido: "x = 10\ny = 20\nif (x > y) {\n    print(x)\n} else {\n    print(y)\n}\nwhile (x < 100) {\n    x = x + 1\n}",
+        lexico: "x = 10\ny = 20 @ 5\nprint(y)",
+        sintatico: "x = 10\nif (x > 5 {\n    print(x)\n}",
+        semantico: "x = 10\nsoma = x + z\nprint(soma)"
+    };
+
+    // Carrega o exemplo inicial ao abrir a página
+    document.getElementById('codigoInput').value = codigos.valido;
+
+    function carregarExemplo() {
+        const selecao = document.getElementById('exemplos').value;
+        document.getElementById('codigoInput').value = codigos[selecao];
+        document.getElementById('terminalOutput').textContent = "Aguardando execução...";
+    }
+
+    async function executarCodigo() {
+        const codigo = document.getElementById('codigoInput').value;
+        const terminal = document.getElementById('terminalOutput');
+        
+        terminal.style.color = "#dcdcaa";
+        terminal.textContent = "Compilando e gerando código em C...\n";
+
+        const formData = new URLSearchParams();
+        formData.append("codigo", codigo);
+
+        try {
+            const resposta = await fetch('/executar', {
+                method: 'POST',
+                body: formData
+            });
+            const texto = await resposta.text();
+            
+            // Se tiver a palavra erro, muda a cor do terminal para vermelho
+            if (texto.toLowerCase().includes("erro")) {
+                terminal.style.color = "#f44336";
+            } else {
+                terminal.style.color = "#4af626"; // Verde sucesso
+            }
+            terminal.textContent = texto;
+        } catch (erro) {
+            terminal.style.color = "#f44336";
+            terminal.textContent = "Falha ao conectar com o servidor do compilador.";
+        }
+    }
+</script>
+
+</body>
+</html>

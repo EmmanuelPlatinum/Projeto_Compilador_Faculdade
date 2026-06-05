@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 int main() {
-    int y, x;
+    int x, y;
     x = 10;
     y = 20;
     if (x > y) {
