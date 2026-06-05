@@ -13,6 +13,9 @@ Este documento descreve a especificação formal e a implementação de um compi
 Link do video de funcionamento do projeto:
 https://youtu.be/NnvS9d2mWMg
 
+Link do Repositório:
+https://github.com/EmmanuelPlatinum/Projeto_Compilador_Faculdade.git
+
 O sistema realiza o ciclo completo de tradução. Ele executa a **análise léxica** (identificação de tokens), **análise sintática** (construção da Árvore Sintática Abstrata - AST via *Top-Down*), **análise semântica** básica (verificação de declaração prévia de variáveis através de uma Tabela de Símbolos) e, por fim, a **geração de código alvo**, atuando como um transpilador que converte a AST validada em um código executável na linguagem **C**.
 
 ## 2. Arquitetura do Compilador e Diagrama de Fases
